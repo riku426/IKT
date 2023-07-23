@@ -26,22 +26,22 @@ def k_means_clust(session, train_students, test_students, max_stu, max_seg, num_
     for ind,i in enumerate(train_students):
         data.append(i[:-identifiers])
     data = array(data)
-    points = tf.constant(data)  
+    points = tf.compat.v1.constant(data)  
 
-    centroids = tf.Variable(tf.random_shuffle(points)[:num_clust, :])
+    centroids = tf.compat.v1.Variable(tf.compat.v1.random_shuffle(points)[:num_clust, :])
     # calculate distances from the centroids to each point
-    points_e = tf.expand_dims(points, axis=0) # (1, N, 2)
-    centroids_e = tf.expand_dims(centroids, axis=1) # (k, 1, 2)  
-    distances = tf.reduce_sum((points_e - centroids_e) ** 2, axis=-1) # (k, N)
+    points_e = tf.compat.v1.expand_dims(points, axis=0) # (1, N, 2)
+    centroids_e = tf.compat.v1.expand_dims(centroids, axis=1) # (k, 1, 2)  
+    distances = tf.compat.v1.reduce_sum((points_e - centroids_e) ** 2, axis=-1) # (k, N)
     # find the index to the nearest centroids from each point
-    indices = tf.argmin(distances, axis=0) # (N,)
+    indices = tf.compat.v1.argmin(distances, axis=0) # (N,)
     # gather k clusters: list of tensors of shape (N_i, 1, 2) for each i
-    clusters = [tf.gather(points, tf.where(tf.equal(indices, i))) for i in range(num_clust)]
+    clusters = [tf.compat.v1.gather(points, tf.compat.v1.where(tf.compat.v1.equal(indices, i))) for i in range(num_clust)]
     # get new centroids (k, 2)
-    new_centroids = tf.concat([tf.reduce_mean(clusters[i], reduction_indices=[0]) for i in range(num_clust)], axis=0)
+    new_centroids = tf.compat.v1.concat([tf.compat.v1.reduce_mean(clusters[i], reduction_indices=[0]) for i in range(num_clust)], axis=0)
     # update centroids
-    assign = tf.assign(centroids, new_centroids)
-    session.run(tf.global_variables_initializer())
+    assign = tf.compat.v1.assign(centroids, new_centroids)
+    session.run(tf.compat.v1.global_variables_initializer())
     for j in range(num_iter):
         clusters_val, centroids_val, _ = session.run([clusters, centroids, assign])
         
@@ -432,6 +432,7 @@ def get_features(students, item_diff, max_stu, cluster, num_skills, datatype):
     p2_list=[]
     p3_list=[]
     p4_list=[]
+    p5_list=[]
     
         
     while(index+ batch_size < len(students)):
@@ -485,6 +486,7 @@ def get_features(students, item_diff, max_stu, cluster, num_skills, datatype):
                    p2_list.append(int(cluster_id))
                    p3_list.append(int(df))
                    p4_list.append(int(correct))
+                   p5_list.append(int(item))
                       
                  
         index += batch_size
@@ -495,8 +497,8 @@ def get_features(students, item_diff, max_stu, cluster, num_skills, datatype):
         
         
     
-    data= pd.DataFrame({'skill_id': p0_list,'skill_mastery': p1_list, 'ability_profile': p2_list, 'problem_difficulty': p3_list, 'correctness': p4_list})
-    data.to_csv ("./"+datatype+"_data.csv", index = None, header=True)
+    data= pd.DataFrame({'skill_id': p0_list,'skill_mastery': p1_list, 'ability_profile': p2_list, 'problem_difficulty': p3_list, 'correctness': p4_list, 'problems': p5_list})
+    data.to_csv ("./v1/"+datatype+"_data.csv", index = None, header=True)
     
     return
     
@@ -511,8 +513,8 @@ def main(unused_args):
     problem_len= 20
     
     
-    train_data='./data/'+data_name+'_train.csv'
-    test_data= './data/'+data_name+'_test.csv'
+    train_data=data_name+'_train.csv'
+    test_data=data_name+'_test.csv'
           
     train_students, test_students, student_ids, max_skills, max_items, train_ids, test_ids =read_data_from_csv_file(train_data, test_data)
     num_skills = max_skills
@@ -525,7 +527,7 @@ def main(unused_args):
     
     max_stu= max(student_ids)+1
     max_seg=max([int(train_max_seg),int(test_max_seg)])+1
-    with tf.Session() as session:
+    with tf.compat.v1.Session() as session:
 
          cluster =k_means_clust(session, train_cluster_data, test_cluster_data, max_stu, max_seg, cluster_num, max_skills, 40)
          get_features(train_students, item_diff, max_stu, cluster, max_skills, "train" )
@@ -538,4 +540,4 @@ def main(unused_args):
              
                
 if __name__ == "__main__":
-    tf.app.run()
+    tf.compat.v1.app.run()

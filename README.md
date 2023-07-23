@@ -1,3 +1,14 @@
+# Repository
+v2 difficulty append
+v4 dkt append
+v5 timekmeans cluster by dkt append
+
+# pythonファイル実行順序
+KnowledgeTracing/run.py
+v3/check.ipynb
+TKmeans/kmeans.ipynb
+LightGBM/lightgbm.ipynb
+
 # IKT
 
 https://arxiv.org/pdf/2112.11209.pdf. 
